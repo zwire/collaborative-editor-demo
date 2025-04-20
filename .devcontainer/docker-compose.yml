@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: ..
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    environment:
+      PYTHON_PATH: /workspace/backend
+      PYTHONDONTWRITEBYTECODE: 1
+      # POSTGRES_HOST: host.docker.internal
+      # POSTGRES_USER: postgres
+      # POSTGRES_PASSWORD: postgres
+      # POSTGRES_DB: postgres
+      # POSTGRES_PORT: 5432
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 3100:3000
