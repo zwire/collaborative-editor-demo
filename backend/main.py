@@ -59,27 +59,58 @@ async def websocket_endpoint(websocket: WebSocket, table_id: str):
                 message_type = data.get("type")
                 payload = data.get(
                     "payload"
-                )  # payload は grid_update の場合、JSON文字列のはず
+                )  # payload は cell_updates の場合、リストのはず
 
-                if message_type == "grid_update" and payload is not None:
-                    # サーバー側の状態を更新 (payloadは既にJSON文字列)
-                    table_states[table_id] = payload
-                    print(f"Updated state for table {table_id}")
+                if message_type == "cell_updates" and isinstance(payload, list):
+                    # Get current state and parse it
+                    current_state_str = table_states.get(
+                        table_id, json.dumps(initial_grid_data)
+                    )
+                    grid_data = json.loads(current_state_str)
 
-                    # 送信者以外のクライアントにブロードキャスト
-                    # ブロードキャストするデータもJSON文字列にする
-                    broadcast_message = json.dumps(
-                        {
-                            "type": "remote_update",
-                            "payload": payload,  # payload は grid_update で受け取ったJSON文字列
-                        }
-                    )
-                    await manager.broadcast(
-                        broadcast_message, table_id, sender=websocket
-                    )
+                    # Process each update in the payload list
+                    for update in payload:
+                        row_index = update.get("rowIndex")
+                        col_index = update.get("colIndex")
+                        value = update.get("value")
+
+                        if (
+                            isinstance(row_index, int)
+                            and isinstance(col_index, int)
+                            and isinstance(value, str)
+                            and 0 <= row_index < len(grid_data)
+                            and 0 <= col_index < len(grid_data[row_index])
+                        ):
+                            # Update the server state (in memory Python list)
+                            grid_data[row_index][col_index] = value
+                            print(
+                                f"Updated cell ({row_index}, {col_index}) for table {table_id}"
+                            )
+
+                            # Prepare broadcast message for this specific cell update
+                            broadcast_message = json.dumps(
+                                {
+                                    "type": "remote_cell_update",
+                                    "payload": {
+                                        "rowIndex": row_index,
+                                        "colIndex": col_index,
+                                        "value": value,
+                                    },
+                                }
+                            )
+                            # Broadcast the individual cell update to other clients
+                            await manager.broadcast(
+                                broadcast_message, table_id, sender=websocket
+                            )
+                        else:
+                            print(f"Invalid cell update received: {update}")
+
+                    # Store the updated state back as a JSON string
+                    table_states[table_id] = json.dumps(grid_data)
+
                 else:
                     print(
-                        f"Received unknown message type or missing payload from {websocket.client}"
+                        f"Received unknown message type or invalid payload from {websocket.client}"
                     )
 
             except json.JSONDecodeError:

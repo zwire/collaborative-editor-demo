@@ -13,8 +13,8 @@
         "saoudrizwan.claude-dev"
       ],
       "settings": {
+        "editor.formatOnSave": true,
         "[python]": {
-          "editor.formatOnSave": true,
           "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
@@ -22,12 +22,18 @@
           "editor.defaultFormatter": "charliermarsh.ruff"
         },
         "[typescript]": {
-          "editor.formatOnSave": true,
           "editor.codeActionsOnSave": {
             "quickfix.biome": "explicit",
             "source.organizeImports.biome": "explicit"
           },
-          "editor.defaultFormatter": "biomejs.biome",
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescriptreact]": {
+          "editor.codeActionsOnSave": {
+            "quickfix.biome": "explicit",
+            "source.organizeImports.biome": "explicit"
+          },
+          "editor.defaultFormatter": "biomejs.biome"
         }
       }
     }
